@@ -49,9 +49,15 @@ button.reset-btn { border-color: #aaa; color: #666; }
 <div class="img-upload-area">
   <input type="text" id="api-key" placeholder="Anthropic API 키 입력 (sk-ant-...)" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:8px;"/>
   <label for="img-upload" style="display:inline-block;padding:7px 14px;background:#fff;border:1px solid #2d5a3d;color:#2d5a3d;border-radius:8px;cursor:pointer;font-size:13px;">
-    🖼 이미지에서 텍스트 추출
-  </label>
-  <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="extractFromImage(this)"/>
+  🖼 이미지 파일 선택
+</label>
+<input type="file" id="img-upload" accept="image/*" style="display:none" onchange="extractFromImage(this)"/>
+
+<span style="font-size:13px;color:#888;margin:0 6px;">또는</span>
+
+<span style="display:inline-block;padding:7px 14px;background:#fff;border:1px solid #2d5a3d;color:#2d5a3d;border-radius:8px;font-size:13px;">
+  ⌘V 붙여넣기로 이미지 입력
+</span>
   <span id="extract-status" style="font-size:12px;color:#888;margin-left:10px;"></span>
 </div>
 <div style="margin-bottom:8px;"></div>
@@ -340,6 +346,64 @@ function savePage(idx) {
   };
   img.src = url;
 }
+
+// 클립보드 붙여넣기로 이미지 입력
+document.addEventListener('paste', function(e) {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) extractFromFile(file);
+      break;
+    }
+  }
+});
+
+function extractFromFile(file) {
+  const status = document.getElementById('extract-status');
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey) { alert('API 키를 먼저 입력해주세요'); return; }
+  status.textContent = '읽는 중...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = file.type;
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'x-api-key': apiKey
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: '이 이미지는 회의록입니다. 이미지에 있는 텍스트를 그대로 추출해주세요. 들여쓰기 구조(숫자, 알파벳, a~e 항목 등)를 최대한 그대로 유지해서 plain text로만 출력해주세요. 설명이나 다른 말은 하지 말고 텍스트만 출력하세요.' }
+            ]
+          }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text || '';
+      if (!text) throw new Error('응답 없음');
+      document.getElementById('input').value = text;
+      convert();
+      status.textContent = '✅ 완료!';
+    } catch (err) {
+      status.textContent = '❌ 오류: ' + (err.message || '알 수 없는 오류');
+    }
+  };
+  reader.readAsDataURL(file);
+}  
+  
 </script>
 </body>
 </html>
