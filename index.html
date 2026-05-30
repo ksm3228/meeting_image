@@ -208,10 +208,10 @@ function classifyLine(raw) {
 
 function lineStyle(cls) {
   if (cls==='header') return { x:PAD_X+11, size:13, weight:'bold', fill:'#2d5a3d', bar:true };
-  if (cls==='num')    return { x:PAD_X+18, size:12.5, weight:'normal', fill:'#222' };
-  if (cls==='sub')    return { x:PAD_X+32, size:12.5, weight:'normal', fill:'#444' };
-  if (cls==='subsub') return { x:PAD_X+30, size:12,   weight:'normal', fill:'#555' };
-  if (cls==='detail') return { x:PAD_X+42, size:11.5, weight:'normal', fill:'#777', italic:true };
+  if (cls==='num')    return { x:PAD_X+4,  size:12.5, weight:'normal', fill:'#222' };
+  if (cls==='sub')    return { x:PAD_X+36, size:12.5, weight:'normal', fill:'#444' };
+  if (cls==='subsub') return { x:PAD_X+52, size:12,   weight:'normal', fill:'#555' };
+  if (cls==='detail') return { x:PAD_X+60, size:11.5, weight:'normal', fill:'#777', italic:true };
   return { x:PAD_X, size:12.5, weight:'normal', fill:'#333' };
 }
 
