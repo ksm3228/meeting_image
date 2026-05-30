@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회의록 카톡 이미지 변환기</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f5f5; color: #1a1a1a; padding: 20px; }
+h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.sub { font-size: 13px; color: #666; margin-bottom: 16px; }
+textarea {
+  width: 100%; min-height: 180px; font-size: 13px;
+  padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+  background: #fff; color: #1a1a1a; resize: vertical;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; line-height: 1.6;
+}
+textarea:focus { outline: none; border-color: #2d5a3d; }
+.btn-row { display: flex; gap: 8px; margin: 10px 0 20px; flex-wrap: wrap; }
+button {
+  font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid #ccc; background: #fff; color: #1a1a1a;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+button:hover { background: #f0f0f0; }
+button.sample-btn { border-color: #2d5a3d; color: #2d5a3d; }
+button.reset-btn { border-color: #aaa; color: #666; }
+.pages-area { display: flex; flex-direction: column; gap: 20px; }
+.page-block { background: #fff; border-radius: 12px; padding: 14px; border: 1px solid #e0e0e0; }
+.page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.page-label { font-size: 12px; color: #888; }
+.save-btn {
+  font-size: 13px; padding: 7px 14px; border-radius: 7px; cursor: pointer;
+  border: none; background: #2d5a3d; color: #fff;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+.save-btn:hover { background: #3a7050; }
+.svg-wrap { border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
+.svg-wrap img { width: 100%; display: block; }
+.empty-msg { font-size: 13px; color: #aaa; text-align: center; padding: 40px 0; }
+.hint { font-size: 12px; color: #888; margin-top: 16px; background: #f9f9f9; border-radius: 8px; padding: 10px 14px; border: 1px solid #eee; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<h1>📋 회의록 카톡 이미지 변환기</h1>
+<p class="sub">A/B/C 큰 제목 기준으로 페이지를 자동 분할하고 PNG로 저장합니다</p>
+
+<textarea id="input" placeholder="회의록을 여기에 붙여넣으세요..."></textarea>
+
+<div class="btn-row">
+  <button class="sample-btn" onclick="loadSample()">예시 불러오기</button>
+  <button class="reset-btn" onclick="resetAll()">초기화</button>
+</div>
+
+<div class="pages-area" id="pages-area">
+  <p class="empty-msg">위에 내용을 입력하면 여기에 바로 나타납니다</p>
+</div>
+
+<p class="hint">💾 <strong>이미지 저장 방법:</strong> "PNG 저장" 버튼 클릭 → 자동으로 파일 다운로드<br>
+📱 <strong>모바일:</strong> 저장된 이미지를 카톡에 첨부해서 전송</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const W = 420, FONT = "'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+const HDR_H = 54, FOOT_H = 30, PAD_X = 18, LINE_H = 21, MAX_LINES = 25;
+
+document.getElementById('input').addEventListener('input', convert);
+
+function resetAll() {
+  document.getElementById('input').value = '';
+  document.getElementById('pages-area').innerHTML = '<p class="empty-msg">위에 내용을 입력하면 여기에 바로 나타납니다</p>';
+}
+
+function loadSample() {
+  document.getElementById('input').value = `2026.05.03 임원회의 상담센터 16:00
+
+A. [5월 8일] 가정의 달 금요기폭 헌신
+1. 일시 : 5월 8일, 금요일
+2. 강사 : 오원웅 목사님 (마음공장 심리코칭)
+3. 의전
+  a) 동탄에서 오심
+    : 기차 타고 오거나 자차로 오실 수도 있음
+  b) 식사는 안하신다고 함
+  c) 문목사님과 티타임
+    : 음료 준비
+  d) 강사 사례비 및 필요시 숙소
+    : 운전해서 오시면 숙소 잡아드려야 할 수 있음
+  e) 주차 자리 확보
+    : 픽업 차량 혹은 강사님 자차 주차 자리 1군데
+4. 가정의 달 이벤트 (작년 당첨자는 당첨에서 제외) ; 상품 -> 치킨, 항목별 각 1가정씩
+  a) 오늘 참석자 중 가장 연배가 높은 분
+  b) 오늘 참석자 중 가장 어린 친구
+  c) 가장 많은 자녀와 참석한 가정(현장 참석한 가족수만 인정)
+  d) 오늘 날짜와 결혼 기념일이 가까운 부부
+    (1) 결혼 20주년, 30주년, 40주년 (현장 예배 참석자 한하여)
+      : 올해는 삭제하고 내년에 사용 고려
+  e) 오늘 참석자 중 부부 합산 나이가 가장 많은 가정
+
+B. [8월22일(토) / 29일(토)] 연합 청소년 부모학교
+1. 일시
+  a) 1강 멈춤!
+    (1) 8월 22일(토) : 비전관 사랑홀 - 김재환 교수
+    (2) 8월 23일(일) : 비전관 생명홀 - 김재환 교수
+      : 주일 청소년 대상 강의는 안 할 수도 있음
+  b) 2강 연결!
+    (1) 8월 29일(토) : 비전관 사랑홀 - 이성근 선교사 (악동뮤지션 부모님)
+
+C. [기타] 동신상담센터 4월 현황 보고
+1. 2025년 12월부터 04월까지 누적 상담 인원 57명 (진행중, 종결, 대기자 포함)
+2. 심리검사상담 비용 산정 중
+  a) 타 상담실 비용 비교 등
+3. 상담 행정 간사 (박현정, 76년생, 대학원 재학중)
+  a) 파트타임으로 6개월 인턴 과정
+  b) 역할 : 상담 일정 조율, 통계 작성 및 바우처 사업 등`;
+  convert();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function classifyLine(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const indent = raw.length - raw.trimStart().length;
+  if (/^[A-Z]\.\s/.test(trimmed)) return { cls:'header', text: trimmed };
+  if (/^\d+\.\s/.test(trimmed) && indent <= 2) return { cls:'num', text: trimmed };
+  if (/^[a-z가-힣]\)\s/.test(trimmed) || (indent >= 2 && indent <= 4)) return { cls:'sub', text: trimmed };
+  if (/^\(\d+\)/.test(trimmed) || (indent >= 4 && indent <= 8)) return { cls:'subsub', text: trimmed };
+  if (/^:/.test(trimmed) || indent > 8) return { cls:'detail', text: trimmed };
+  return { cls:'plain', text: trimmed };
+}
+
+function lineStyle(cls) {
+  if (cls==='header') return { x:PAD_X+11, size:13, weight:'bold', fill:'#2d5a3d', bar:true };
+  if (cls==='num')    return { x:PAD_X+4,  size:12.5, weight:'normal', fill:'#222' };
+  if (cls==='sub')    return { x:PAD_X+17, size:12.5, weight:'normal', fill:'#444' };
+  if (cls==='subsub') return { x:PAD_X+30, size:12,   weight:'normal', fill:'#555' };
+  if (cls==='detail') return { x:PAD_X+42, size:11.5, weight:'normal', fill:'#777', italic:true };
+  return { x:PAD_X, size:12.5, weight:'normal', fill:'#333' };
+}
+
+function buildSVG(headerDate, headerTitle, pageLines, pageNum, totalPages, fmt) {
+  const bodyH = pageLines.length * LINE_H + 18;
+  const H = HDR_H + bodyH + FOOT_H;
+  const pageLabel = totalPages > 1 ? ` (${pageNum}/${totalPages})` : '';
+  let svgLines = '';
+  pageLines.forEach((item, i) => {
+    const y = HDR_H + 15 + i * LINE_H;
+    const st = lineStyle(item.cls);
+    const style = `font-family:${FONT};font-size:${st.size}px;font-weight:${st.weight};fill:${st.fill};${st.italic?'font-style:italic;':''}`;
+    if (st.bar) svgLines += `<rect x="${PAD_X}" y="${y-13}" width="3" height="17" fill="#2d5a3d"/>`;
+    svgLines += `<text x="${st.x}" y="${y}" style="${style}">${esc(item.text)}</text>`;
+  });
+  const footY = HDR_H + bodyH + 20;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+<rect width="${W}" height="${H}" fill="#fff" rx="10"/>
+<rect width="${W}" height="${HDR_H}" fill="#2d5a3d" rx="10"/>
+<rect y="${HDR_H-10}" width="${W}" height="10" fill="#2d5a3d"/>
+<text x="${PAD_X}" y="21" style="font-family:${FONT};font-size:10px;fill:#a8d5b8;">${esc(headerDate||fmt)} 회의록${esc(pageLabel)}</text>
+<text x="${PAD_X}" y="41" style="font-family:${FONT};font-size:14px;font-weight:bold;fill:#fff;">${esc(headerTitle||'회의록')}</text>
+${svgLines}
+<line x1="${PAD_X}" y1="${footY-8}" x2="${W-PAD_X}" y2="${footY-8}" stroke="#eee" stroke-width="0.5"/>
+<text x="${W-PAD_X}" y="${footY+6}" text-anchor="end" style="font-family:${FONT};font-size:10px;fill:#aaa;">정리: ${esc(fmt)}</text>
+</svg>`;
+}
+
+function groupIntoSections(classified) {
+  const sections = [];
+  let cur = null;
+  classified.forEach(item => {
+    if (item.cls === 'header') { if (cur) sections.push(cur); cur = [item]; }
+    else { if (!cur) cur = []; cur.push(item); }
+  });
+  if (cur && cur.length) sections.push(cur);
+  return sections;
+}
+
+function packSectionsIntoPages(sections) {
+  const pages = [];
+  let curPage = [];
+  sections.forEach(section => {
+    if (section.length > MAX_LINES) {
+      if (curPage.length > 0) { pages.push(curPage); curPage = []; }
+      for (let i = 0; i < section.length; i += MAX_LINES) pages.push(section.slice(i, i + MAX_LINES));
+    } else {
+      if (curPage.length > 0 && curPage.length + section.length + 1 > MAX_LINES) {
+        pages.push(curPage); curPage = [...section];
+      } else {
+        if (curPage.length > 0) curPage.push({cls:'spacer', text:''});
+        curPage = curPage.concat(section);
+      }
+    }
+  });
+  if (curPage.length > 0) pages.push(curPage);
+  return pages;
+}
+
+function convert() {
+  const raw = document.getElementById('input').value.trim();
+  const area = document.getElementById('pages-area');
+  if (!raw) { area.innerHTML = '<p class="empty-msg">위에 내용을 입력하면 여기에 바로 나타납니다</p>'; return; }
+
+  const lines = raw.split('\n');
+  const today = new Date();
+  const fmt = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+
+  let headerDate = '', headerTitle = '', bodyLines = lines;
+  const firstLine = lines[0].trim();
+  const dateMatch = firstLine.match(/(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2})/);
+  if (dateMatch) {
+    headerDate = dateMatch[1]; headerTitle = firstLine;
+    bodyLines = lines.slice(1);
+    while (bodyLines.length && bodyLines[0].trim() === '') bodyLines = bodyLines.slice(1);
+  }
+
+  const classified = bodyLines.map(classifyLine).filter(Boolean);
+  const sections = groupIntoSections(classified);
+  const pages = packSectionsIntoPages(sections);
+  const totalPages = pages.length;
+
+  let html = '';
+  const svgList = [];
+
+  pages.forEach((pageLines, i) => {
+    const pNum = i + 1;
+    const filtered = pageLines.filter(l => l.cls !== 'spacer');
+    const svgStr = buildSVG(headerDate, headerTitle, filtered, pNum, totalPages, fmt);
+    svgList.push(svgStr);
+    const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+    html += `<div class="page-block">
+      <div class="page-top">
+        <span class="page-label">${totalPages > 1 ? `${pNum} / ${totalPages} 페이지` : '1 페이지'}</span>
+        <button class="save-btn" onclick="savePage(${i})">💾 PNG 저장</button>
+      </div>
+      <div class="svg-wrap" id="svgwrap-${i}"><img src="${encoded}" style="width:100%;display:block;"/></div>
+    </div>`;
+  });
+
+  area.innerHTML = html;
+  window._svgList = svgList;
+  window._headerTitle = headerTitle;
+}
+
+function savePage(idx) {
+  const svgStr = window._svgList[idx];
+  if (!svgStr) return;
+  const title = (window._headerTitle||'회의록').replace(/\s+/g,'_').slice(0,20);
+  const filename = `${title}_${idx+1}페이지.png`;
+
+  const blob = new Blob([svgStr], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * 2;
+    canvas.height = img.height * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, img.width, img.height);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(b => {
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = URL.createObjectURL(b);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, 'image/png');
+  };
+  img.src = url;
+}
+</script>
+</body>
+</html>
