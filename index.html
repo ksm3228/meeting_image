@@ -127,6 +127,13 @@ const HDR_H = 54, FOOT_H = 30, PAD_X = 18, LINE_H = 21, MAX_LINES = 25;
 
 document.getElementById('input').addEventListener('input', convert);
 
+  // API 키 자동 저장/불러오기
+const savedKey = localStorage.getItem('anthropic_api_key');
+if (savedKey) document.getElementById('api-key').value = savedKey;
+document.getElementById('api-key').addEventListener('change', function() {
+  localStorage.setItem('anthropic_api_key', this.value);
+});
+
 function resetAll() {
   document.getElementById('input').value = '';
   document.getElementById('pages-area').innerHTML = '<p class="empty-msg">위에 내용을 입력하면 여기에 바로 나타납니다</p>';
