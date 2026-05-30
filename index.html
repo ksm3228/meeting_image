@@ -44,7 +44,7 @@ button.reset-btn { border-color: #aaa; color: #666; }
 <body>
 
 <h1>📋 회의록 카톡 이미지 변환기</h1>
-<p class="sub">A/B/C 큰 제목 기준으로 페이지를 자동 분할하고 PNG로 저장합니다 <span style="font-size:11px;color:#bbb;margin-left:6px;">v2.3</span></p>
+<p class="sub">A/B/C 큰 제목 기준으로 페이지를 자동 분할하고 PNG로 저장합니다 <span style="font-size:11px;color:#bbb;margin-left:6px;">v2.4</span></p>
 
 <div class="img-upload-area">
   <input type="text" id="api-key" placeholder="Anthropic API 키 입력 (sk-ant-...)" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:8px;"/>
@@ -103,7 +103,7 @@ if (!apiKey) { alert('API 키를 먼저 입력해주세요'); status.textContent
           'x-api-key': document.getElementById('api-key').value.trim()
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20251101',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 2000,
           messages: [{
             role: 'user',
@@ -381,7 +381,7 @@ function extractFromFile(file) {
           'x-api-key': apiKey
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20251101',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 2000,
           messages: [{
             role: 'user',
