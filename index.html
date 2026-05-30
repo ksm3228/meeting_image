@@ -103,7 +103,7 @@ if (!apiKey) { alert('API 키를 먼저 입력해주세요'); status.textContent
           'x-api-key': document.getElementById('api-key').value.trim()
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
+          model: 'claude-sonnet-4-5-20251101',
           max_tokens: 2000,
           messages: [{
             role: 'user',
@@ -380,7 +380,7 @@ function extractFromFile(file) {
           'x-api-key': apiKey
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
+          model: 'claude-sonnet-4-5-20251101',
           max_tokens: 2000,
           messages: [{
             role: 'user',
