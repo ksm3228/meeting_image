@@ -44,7 +44,7 @@ button.reset-btn { border-color: #aaa; color: #666; }
 <body>
 
 <h1>📋 회의록 카톡 이미지 변환기</h1>
-<p class="sub">A/B/C 큰 제목 기준으로 페이지를 자동 분할하고 PNG로 저장합니다 <span style="font-size:11px;color:#bbb;margin-left:6px;">v2.8</span></p>
+<p class="sub">A/B/C 큰 제목 기준으로 페이지를 자동 분할하고 PNG로 저장합니다 <span style="font-size:11px;color:#bbb;margin-left:6px;">v2.9</span></p>
 
 <div class="img-upload-area">
   <input type="text" id="api-key" placeholder="Anthropic API 키 입력 (sk-ant-...)" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:8px;"/>
@@ -199,20 +199,20 @@ function classifyLine(raw) {
   if (!trimmed) return null;
   const indent = raw.length - raw.trimStart().length;
   if (/^[A-Z]\.\s/.test(trimmed)) return { cls:'header', text: trimmed };
-  if (/^\d+\.\s/.test(trimmed) && indent <= 2) return { cls:'num', text: trimmed };
-  if (/^[a-z가-힣]\)\s/.test(trimmed) || (indent >= 2 && indent <= 4)) return { cls:'sub', text: trimmed };
-  if (/^\(\d+\)/.test(trimmed) || (indent >= 4 && indent <= 8)) return { cls:'subsub', text: trimmed };
+  if (/^\d+\.\s/.test(trimmed)) return { cls:'num', text: trimmed };
+  if (/^[a-zA-Z]\)\s/.test(trimmed)) return { cls:'sub', text: trimmed };
+  if (/^\(\d+\)/.test(trimmed)) return { cls:'subsub', text: trimmed };
   if (/^:/.test(trimmed)) return { cls:'detail', text: trimmed };
-  if (indent > 8) return { cls:'sub', text: trimmed };
+  if (indent >= 2) return { cls:'sub', text: trimmed };
   return { cls:'plain', text: trimmed };
 }
 
 function lineStyle(cls) {
-  if (cls==='header') return { x:PAD_X+11, size:13, weight:'bold', fill:'#2d5a3d', bar:true };
-  if (cls==='num')    return { x:PAD_X+4,  size:12.5, weight:'normal', fill:'#222' };
-  if (cls==='sub')    return { x:PAD_X+36, size:12.5, weight:'normal', fill:'#444' };
-  if (cls==='subsub') return { x:PAD_X+52, size:12,   weight:'normal', fill:'#555' };
-  if (cls==='detail') return { x:PAD_X+60, size:11.5, weight:'normal', fill:'#777', italic:true };
+  if (cls==='header') return { x:PAD_X,    size:13,   weight:'bold',   fill:'#2d5a3d', bar:true };
+  if (cls==='num')    return { x:PAD_X+14, size:12.5, weight:'normal', fill:'#222' };
+  if (cls==='sub')    return { x:PAD_X+34, size:12.5, weight:'normal', fill:'#444' };
+  if (cls==='subsub') return { x:PAD_X+50, size:12,   weight:'normal', fill:'#555' };
+  if (cls==='detail') return { x:PAD_X+50, size:11.5, weight:'normal', fill:'#777', italic:true };
   return { x:PAD_X, size:12.5, weight:'normal', fill:'#333' };
 }
 
